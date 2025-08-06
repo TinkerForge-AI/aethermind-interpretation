@@ -4,3 +4,9 @@ numpy
 git+https://github.com/openai/CLIP.git
 openai-whisper
 opencv-python
+pydantic
+pytest
+librosa 
+tensorflow 
+tensorflow-hub 
+openl3
