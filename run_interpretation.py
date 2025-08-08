@@ -112,9 +112,25 @@ def annotate_events(event_file):
 
 
 if __name__ == "__main__":
+
     import argparse
+    import subprocess
     parser = argparse.ArgumentParser()
     parser.add_argument("event_file", type=str, help="Path to the JSON file containing detected events.")
+    parser.add_argument("--embed_out", type=str, default=None, help="Path to save embedded events JSON (optional)")
     args = parser.parse_args()
 
     annotate_events(args.event_file)
+
+    # Automatically run embeddings.embed after annotation
+    # python3 run_interpretation.py <event_file.json> [--embed_out <output_file.json>]
+    embed_out = args.embed_out or (os.path.splitext(args.event_file)[0] + ".embedded.json")
+    print(f"[Info] Running embeddings.embed on {args.event_file} -> {embed_out}")
+    result = subprocess.run([
+        "python3", "-m", "embeddings.embed", args.event_file, "-o", embed_out
+    ], capture_output=True, text=True)
+    print(result.stdout)
+    if result.returncode != 0:
+        print(f"[Error] embeddings.embed failed: {result.stderr}")
+    else:
+        print(f"[Done] Embedded events written to {embed_out}")
