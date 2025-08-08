@@ -1,0 +1,43 @@
+----
+When trying to do things in the database run the below
+
+"duckdb path/to/db "[SQL_STATEMENT]"
+----
+
+CREATE TABLE IF NOT EXISTS events (
+  event_id TEXT PRIMARY KEY,
+  session_id TEXT,
+  start_ts DOUBLE,
+  end_ts DOUBLE,
+  scene_type TEXT,
+  is_event BOOLEAN,
+  valence TEXT,
+  video_path TEXT,
+  audio_path TEXT,
+  text_view TEXT,
+  embeddings_T DOUBLE[],
+  embeddings_S DOUBLE[],
+  embeddings_F DOUBLE[],
+  raw JSON
+);
+
+CREATE TABLE IF NOT EXISTS episodes (
+  episode_id TEXT PRIMARY KEY,
+  session_id TEXT,
+  start_ts DOUBLE,
+  end_ts DOUBLE,
+  caption TEXT,
+  tags_json TEXT,
+  f_embed BLOB,
+  summary TEXT,
+  thought_text TEXT,
+  valence_guess TEXT,
+  confidence DOUBLE
+);
+
+CREATE TABLE IF NOT EXISTS episode_events (
+  episode_id TEXT NOT NULL,
+  event_id   TEXT NOT NULL,
+  ord        INTEGER NOT NULL,
+  PRIMARY KEY (episode_id, event_id)
+);

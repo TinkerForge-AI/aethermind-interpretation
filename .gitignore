@@ -1,0 +1,10 @@
+annotators/__pycache__/
+explain/__pycache__/
+pipeline/__pycache__/
+reports/__pycache__/
+tests/__pycache__/
+tools/__pycache__/
+annotators/__pycache__/
+embeddings/__pycache__/
+memory/__pycache__/
+reflection/__pycache__
