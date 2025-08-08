@@ -1,3 +1,4 @@
+out/
 annotators/__pycache__/
 explain/__pycache__/
 pipeline/__pycache__/
