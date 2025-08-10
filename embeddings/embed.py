@@ -93,8 +93,8 @@ def main():
     print(f"✅ Embedded {len(events)} events → {out_path}")
     print(f"   Included fields: text_view, embeddings.T/S/F")
 
-# python3 -m embeddings.embed \ 
-# ../aethermind-perception/chunks/session_20250805_162657/session_events.normalized.json \
-# -o ../aethermind-perception/chunks/session_20250805_162657/session_events.embedded.json
+# python3 -m embeddings.embed \
+# ../aethermind-perception/aethermind_perception/chunks/session_20250808_220541/session_events.json \
+# -o ../aethermind-perception/aethermind_perception/chunks/session_20250808_220541/session_events.embedded.json
 if __name__ == "__main__":
     main()

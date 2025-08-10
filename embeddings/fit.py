@@ -94,16 +94,29 @@ def main():
     # ---------- TEXT PIPELINE ----------
     # Build compact text views for each event and fit TF-IDF vectorizer
     texts = [event_to_text(e) for e in events]
-    tfidf = TfidfVectorizer(
-        max_features=args.max_text_features,
-        ngram_range=(1,2),
-        lowercase=True,
-        strip_accents="unicode",
-        min_df=2,        # ignore 1-off tokens
-        max_df=0.9,     # drop super-common tokens
-        sublinear_tf=True
-    )
-    X_tfidf = tfidf.fit_transform(texts)  # [N_events, Vocab_size]
+    try:
+        tfidf = TfidfVectorizer(
+            max_features=args.max_text_features,
+            ngram_range=(1,2),
+            lowercase=True,
+            strip_accents="unicode",
+            min_df=2,
+            max_df=0.9,
+            sublinear_tf=True
+        )
+        X_tfidf = tfidf.fit_transform(texts)
+    except ValueError as ve:
+        print(f"[WARN] TF-IDF fit failed: {ve}\nTrying fallback min_df=1, max_df=1.0...")
+        tfidf = TfidfVectorizer(
+            max_features=args.max_text_features,
+            ngram_range=(1,2),
+            lowercase=True,
+            strip_accents="unicode",
+            min_df=1,
+            max_df=1.0,
+            sublinear_tf=True
+        )
+        X_tfidf = tfidf.fit_transform(texts)
 
     # Reduce text features to t_dim using TruncatedSVD
     tsvd = TruncatedSVD(n_components=min(args.t_dim, X_tfidf.shape[1]-1) if X_tfidf.shape[1] > 1 else 1, random_state=42)
@@ -154,7 +167,7 @@ def main():
     print(f"   dims: T={meta['t_dim']} S={meta['s_dim']} F={meta['f_dim']} (may be < targets if data small)")
 
 # python3 -m embeddings.fit \
-# ../aethermind-perception/chunks/session_20250805_162657/session_events.normalized.json \
+# ../aethermind-perception/aethermind_perception/chunks/session_20250808_220541/session_events.normalized.json  \
 # --t_dim 64 --s_dim 32 --f_dim 64
 if __name__ == "__main__":
     main()

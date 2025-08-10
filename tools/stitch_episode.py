@@ -38,18 +38,31 @@ def _resolve_episode_id(epid_or_prefix: str) -> str:
     return rows[0][0]
 
 def _resolve_path(p: str) -> str:
-    if not p: return ""
-    if os.path.isabs(p) and os.path.exists(p):
-        return p
+    if not p:
+        print(f"[DEBUG] _resolve_path: empty input path")
+        return ""
     root = os.environ.get("AETHERMIND_MEDIA_ROOT", "")
-    if root:
+    print(f"[DEBUG] _resolve_path: root={root} p={p}")
+    # Always join root with p if p is not absolute
+    if not os.path.isabs(p):
         cand = os.path.normpath(os.path.join(root, p))
-        if os.path.exists(cand): return cand
-        if p.startswith("chunks/"):
-            cand2 = os.path.normpath(os.path.join(root, p))
-            if os.path.exists(cand2): return cand2
-    cand = os.path.abspath(p)
-    if os.path.exists(cand): return cand
+        print(f"[DEBUG] _resolve_path: candidate (root+rel)={cand}")
+        if os.path.exists(cand):
+            print(f"[DEBUG] _resolve_path: FOUND {cand}")
+            return cand
+    # If absolute, check directly
+    if os.path.isabs(p):
+        print(f"[DEBUG] _resolve_path: candidate (abs)={p}")
+        if os.path.exists(p):
+            print(f"[DEBUG] _resolve_path: FOUND {p}")
+            return p
+    # Fallback: try abspath
+    cand = os.path.abspath(os.path.join(root, p))
+    print(f"[DEBUG] _resolve_path: candidate (abspath)={cand}")
+    if os.path.exists(cand):
+        print(f"[DEBUG] _resolve_path: FOUND {cand}")
+        return cand
+    print(f"[DEBUG] _resolve_path: NOT FOUND for p={p}")
     return ""  # not found
 
 def _run(cmd):
@@ -125,6 +138,8 @@ def main():
     for (vpath, apath, _) in rows:
         v = _resolve_path(vpath or "")
         a = _resolve_path(apath or "")
+        print(f"[DEBUG] Event video_path: {vpath} → resolved: {v}")
+        print(f"[DEBUG] Event audio_path: {apath} → resolved: {a}")
         if not v:
             print(f"⚠️  Missing video file: {vpath}", file=sys.stderr)
             missing += 1

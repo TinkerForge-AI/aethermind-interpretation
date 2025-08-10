@@ -32,7 +32,7 @@ def run(cmd: List[str], cwd: Optional[str] = None) -> None:
 
 def ensure_env():
     if not os.environ.get("AETHERMIND_MEM_DIR"):
-        print("ℹ️  AETHERMIND_MEM_DIR not set; using default under memory/store/", file=sys.stderr)
+        print("ℹ️  AETHERMIND_MEM_DIR not set;", file=sys.stderr)
     if not os.environ.get("AETHERMIND_EMB_ARTIFACT_DIR"):
         print("ℹ️  AETHERMIND_EMB_ARTIFACT_DIR not set; using embeddings/artifacts/", file=sys.stderr)
     if not os.environ.get("AETHERMIND_MEDIA_ROOT"):
@@ -59,8 +59,7 @@ def concat_events_to_tmp(json_paths: List[Path]) -> Path:
     out = Path(td.name) / "all_events.normalized.concat.json"
     with open(out, "w") as f:
         json.dump(all_events, f)
-    out._td_ref = td  # keep tempdir alive
-    return out
+    return out, td  # return both
 
 def get_session_ids_from_db() -> List[str]:
     code = r"""
@@ -187,7 +186,7 @@ def main():
 
     # 0) Optional: refit artifacts
     if args.refit:
-        concat_path = concat_events_to_tmp(in_files)
+        concat_path, tmpdir = concat_events_to_tmp(in_files)
         run([sys.executable, "-m", "embeddings.fit", str(concat_path)])
     else:
         need_artifacts = not Path("embeddings/artifacts/tfidf.joblib").exists()
@@ -260,6 +259,15 @@ for r in con.execute(
         exclude_scenes = csv_list(args.scene_exclude)
         ban_tags = csv_list(args.ban_tags)
 
+        # DEBUG: Print all episodes and their properties before filtering
+        import duckdb
+        mem_dir = os.environ.get("AETHERMIND_MEM_DIR", MEM_DIR)
+        db_path = os.path.join(mem_dir, "memory.duckdb")
+        con = duckdb.connect(db_path)
+        print("[DEBUG] All episodes before stitching selection:")
+        for row in con.execute("SELECT episode_id, session_id, scene_type, num_events, salience_mean, start_ts, end_ts FROM episodes").fetchall():
+            print(f"  episode_id={row[0]} session_id={row[1]} scene_type={row[2]} num_events={row[3]} salience_mean={row[4]} duration={row[6]-row[5]:.1f}")
+        con.close()
         code = rf"""
 from memory.db import connect
 con = connect(True)
@@ -342,13 +350,13 @@ print("\n".join([r[0] for r in rows]))
 # Example (Recall mode, stitch ALL):
 # python3 -m pipeline.nightly \
 #   --mode recall \
-#   --inputs "../aethermind-perception/chunks/session_2025*/session_events.normalized.json" \
+#   --inputs "/home/dchisholm125/Desktop/repos-local/aethermind-perception/aethermind_perception/chunks/session_20250808_220541/session_events.normalized.json" \
 #   --report --make-journals \
 #   --stitch-all --min-episode-events 2 \
 #   --keep-salience-min 0.30 --episode-min-sec 0 --episode-max-sec 600
 
 # python3 -m pipeline.nightly \
-#   --inputs "../aethermind-perception/chunks/session_2025*/session_events.normalized.json" \
+#   --inputs "../aethermind-perception/aethermind-perception/chunks/session_20250808_220541/session_events.normalized.json" \
 #   --mode recall --stitch-all
 
 if __name__ == "__main__":
