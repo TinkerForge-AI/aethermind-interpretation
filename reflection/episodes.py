@@ -13,6 +13,9 @@ Walks events in time order, merging when rules pass; otherwise starts a new epis
 Stores: episode_id, session_id, start_ts, end_ts, scene_type, num_events, salience_mean, 
     tags (top-N labels), summary (tiny template), embeddings_F (mean vector).
 Writes events.episode_id for back-reference.
+
+HITL Note:
+Episodes are constructed from any subset of input streams (video, audio, keyboard, mouse). An episode may contain only audio, only video, only actions, or any combination. Only episodes with valid video and audio paths are stitched for human review; all episodes are stored in the database for analysis.
 """
 
 EP_SCHEMA = r"""
@@ -205,14 +208,18 @@ def main():
 
     con = connect(read_only=False)
     # insert episodes
-    con.executemany("""
+    # Serialize tags to JSON for robust storage
+    con.executemany(
+        """
         INSERT OR REPLACE INTO episodes
         (episode_id, session_id, start_ts, end_ts, scene_type, num_events, salience_mean, tags, summary, embeddings_F)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, [(
-        ep["episode_id"], ep["session_id"], ep["start_ts"], ep["end_ts"], ep["scene_type"],
-        ep["num_events"], ep["salience_mean"], ep["tags"], ep["summary"], ep["embeddings_F"]
-    ) for ep in all_eps])
+        """,
+        [(
+            ep["episode_id"], ep["session_id"], ep["start_ts"], ep["end_ts"], ep["scene_type"],
+            ep["num_events"], ep["salience_mean"], json.dumps(ep["tags"]), ep["summary"], ep["embeddings_F"]
+        ) for ep in all_eps]
+    )
 
     # back-fill events.episode_id
     con.executemany("UPDATE events SET episode_id = ? WHERE event_id = ?", [(epid, eid) for (eid, epid) in mapping])

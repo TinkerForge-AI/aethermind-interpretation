@@ -1,4 +1,5 @@
 Aethermind Pipeline: Recommended Execution Order
+> **Human-in-the-Loop (HITL) Note:** Episodes are built from any subset of input streams (video, audio, keyboard, mouse). Not all episodes will have complete media; only those with valid video and audio paths are stitched for human review. All episodes are stored in the database for downstream analysis.
 
 1. Normalize Events
 Prepare raw perception event JSONs for annotation and embedding.

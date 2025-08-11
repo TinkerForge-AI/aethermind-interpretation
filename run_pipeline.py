@@ -35,6 +35,8 @@ def main(session_folder):
         "--only_vector_features"
     ])
 
+    # ^^^ turn off these top 3 if you just need to write things to DuckDB!
+
     # 4. Embed events
     run([
         "python3", "-m", "embeddings.embed",

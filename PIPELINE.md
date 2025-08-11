@@ -1,3 +1,4 @@
+> **Note:** Episodes are constructed from any meaningful subset of inputs (video, audio, keyboard, mouse). An episode may contain only audio, only video, only actions, or any combination. However, only episodes with complete media paths (video + audio) are stitched for human review; others are stored in the database for analysis but not stitched.
 # Aethermind Interpretation Pipeline
 
 This document describes the recommended end-to-end pipeline for processing perception events and building hierarchical semantic memory (HSM) in Aethermind.  
